@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tiger_hacks_frontend/util.dart' show isMobile, themeSeedColor;
+import 'package:tiger_hacks_frontend/views/components/log_out_button.dart';
 import 'package:tiger_hacks_frontend/views/personal/personal_caretakers_page.dart';
 import 'package:tiger_hacks_frontend/views/personal/personal_home_page.dart';
 import 'package:tiger_hacks_frontend/views/personal/personal_summaries_page.dart';
@@ -78,6 +79,7 @@ class _PersonalMainViewState extends State<PersonalMainView> {
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         leading: Icon(Icons.monitor_heart, size: 32.0, color: Colors.white),
+        actions: [LogOutButton()],
       ),
       bottomNavigationBar: isMobile
           ? NavigationBar(

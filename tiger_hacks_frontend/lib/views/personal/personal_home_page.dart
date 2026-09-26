@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tiger_hacks_frontend/util.dart';
+import 'package:tiger_hacks_frontend/views/components/live_view.dart';
 
 class PersonalHomePage extends StatefulWidget {
   const PersonalHomePage({super.key});
@@ -16,7 +16,7 @@ class _PersonalHomePageState extends State<PersonalHomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildLiveView(),
+        const LiveView(title: 'Live View:', placeholder: 'No Devices'),
         Container(height: 16.0),
         Row(
           children: [
@@ -39,30 +39,7 @@ class _PersonalHomePageState extends State<PersonalHomePage> {
     );
   }
 
-  _buildLiveView() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Live View:"),
-        Container(
-          height: 400,
-          decoration: BoxDecoration(
-            color: themeSeedColor.withAlpha(50),
-            shape: BoxShape.rectangle,
-            borderRadius: BorderRadius.all(Radius.circular(16)),
-          ),
-          child: Center(
-            child: Text(
-              "No Devices",
-              style: TextStyle(fontStyle: FontStyle.italic),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  startRecord() {
+  void startRecord() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
