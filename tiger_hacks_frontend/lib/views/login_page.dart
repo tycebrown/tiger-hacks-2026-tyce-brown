@@ -19,9 +19,6 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   String? _error;
 
-  late GlobalState globalState;
-  late BuildContext bctx;
-
   @override
   void dispose() {
     _usernameController.dispose();
@@ -40,43 +37,32 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _error = null);
-    this.globalState.user = user;
-    await redirect();
+    await redirect(user);
   }
 
-  Future<bool> _userExists(String username) async {
-    // Replace with a user lookup when authentication is connected.
-    return true;
-  }
-
-  Future<void> redirect() async {
-    if (this.globalState.user == null) {
-      throw new Exception("Wtf??? login page, globalstate user == null");
-    }
-    switch (this.globalState.user!.role) {
-      case .individual:
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => PersonalMainView()),
-        );
-        break;
-      case .caretaker:
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => CaretakerMainView()),
-        );
-        break;
-    }
+  Future<void> redirect(User user) async {
+    final globalState = context.read<GlobalState>();
+    globalState.user = user;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      switch (user.role) {
+        case .individual:
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => PersonalMainView()),
+          );
+          break;
+        case .caretaker:
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => CaretakerMainView()),
+          );
+          break;
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    this.globalState = context.read<GlobalState>();
-    this.bctx = context;
-    if (this.globalState.user != null) {
-      redirect();
-      return Scaffold(body: CircularProgressIndicator());
-    }
     return Scaffold(
       appBar: AppBar(title: const Text('Log in')),
       body: Center(

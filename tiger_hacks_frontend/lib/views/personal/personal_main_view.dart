@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:tiger_hacks_frontend/util.dart' show isMobile;
+import 'package:tiger_hacks_frontend/util.dart' show isMobile, themeSeedColor;
+import 'package:tiger_hacks_frontend/views/personal/personal_home_page.dart';
 
 enum PersonalPage { HomePage, SummariesPage, MyCaretakers, History }
 
@@ -33,7 +34,7 @@ PersonalPage indexToPersonalPage(int index) {
 const navigationDestinations = [
   NavigationDestination(icon: Icon(Icons.home), label: "Home"),
   NavigationDestination(icon: Icon(Icons.show_chart), label: "Summaries"),
-  NavigationDestination(icon: Icon(Icons.share), label: "My Caretakers"),
+  NavigationDestination(icon: Icon(Icons.favorite), label: "My Caretakers"),
   NavigationDestination(icon: Icon(Icons.history), label: "History"),
 ];
 
@@ -44,7 +45,7 @@ const navigationRailDestinations = [
     label: Text("Summaries"),
   ),
   NavigationRailDestination(
-    icon: Icon(Icons.share),
+    icon: Icon(Icons.favorite),
     label: Text("My Caretakers"),
   ),
   NavigationRailDestination(icon: Icon(Icons.history), label: Text("History")),
@@ -61,35 +62,45 @@ class _PersonalMainViewState extends State<PersonalMainView> {
   PersonalPage currentPage = .HomePage;
 
   @override
-  Widget build(BuildContext bc) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: themeSeedColor,
         title: const Text(
           'LiveWire',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        leading: Icon(Icons.monitor_heart),
+        leading: Icon(Icons.monitor_heart, size: 32.0, color: Colors.white),
       ),
       bottomNavigationBar: isMobile
           ? NavigationBar(
               destinations: navigationDestinations,
-              onDestinationSelected: (value) => 0,
+              onDestinationSelected: (value) =>
+                  setState(() => currentPage = indexToPersonalPage(value)),
             )
           : null,
 
-      body: Row(
-        children: [
-          ?(!isMobile
-              ? NavigationRail(
-                  destinations: navigationRailDestinations,
-                  selectedIndex: 0,
-                )
-              : null),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-            child: _buildContent(),
-          ),
-        ],
+      body: SafeArea(
+        child: Row(
+          children: [
+            ?(!isMobile
+                ? NavigationRail(
+                    extended: true,
+                    destinations: navigationRailDestinations,
+                    onDestinationSelected: (value) => setState(
+                      () => currentPage = indexToPersonalPage(value),
+                    ),
+                    selectedIndex: personalPageToIndex(currentPage),
+                  )
+                : null),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                child: _buildContent(),
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: _buildFloatingActionButton(),
     );
@@ -110,20 +121,11 @@ class _PersonalMainViewState extends State<PersonalMainView> {
   }
 
   Widget? _buildFloatingActionButton() {
-    switch (currentPage) {
-      case .HomePage:
-        return PersonalHomePage();
-      case .SummariesPage:
-        return null;
-      case .MyCaretakers:
-        return null;
-      case .History:
-        return null;
-    }
     return null;
   }
 }
 
+// -------------------------------------
 class PersonalHistoryPage extends StatefulWidget {
   @override
   State<PersonalHistoryPage> createState() => _PersonalHistoryPageState();
@@ -132,7 +134,7 @@ class PersonalHistoryPage extends StatefulWidget {
 class _PersonalHistoryPageState extends State<PersonalHistoryPage> {
   @override
   Widget build(BuildContext context) {
-    throw UnimplementedError();
+    return Text("TODO");
   }
 }
 
@@ -145,7 +147,7 @@ class _PersonalCaretakersPageState extends State<PersonalCaretakersPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    throw UnimplementedError();
+    return Text("TODO");
   }
 }
 
@@ -158,49 +160,6 @@ class _PersonalSummariesPageState extends State<PersonalSummariesPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    throw UnimplementedError();
-  }
-}
-
-class PersonalHomePage extends StatefulWidget {
-  const PersonalHomePage({super.key});
-
-  @override
-  State<StatefulWidget> createState() {
-    return _PersonalHomePageState();
-  }
-}
-
-class _PersonalHomePageState extends State<PersonalHomePage> {
-  @override
-  Widget build(BuildContext bc) {
-    return Column(
-      children: [
-        _buildLiveView(),
-        Row(children: [_buildSummariesTile(), _buildShareTile()]),
-      ],
-    );
-  }
-
-  _buildLiveView() {
-    return Container(
-      height: 200,
-      width: 400,
-      color: Colors.grey,
-      child: Center(
-        child: Text(
-          "Live View",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  _buildSummariesTile() {
-    return Expanded(child: Card(child: Text('Toodles')));
-  }
-
-  _buildShareTile() {
-    return Expanded(child: Card(child: Text('Toodles')));
+    return Text("TODO");
   }
 }
