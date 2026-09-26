@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:tiger_hacks_frontend/util.dart' show isMobile, themeSeedColor;
+import 'package:tiger_hacks_frontend/views/personal/personal_caretakers_page.dart';
 import 'package:tiger_hacks_frontend/views/personal/personal_home_page.dart';
+import 'package:tiger_hacks_frontend/views/personal/personal_summaries_page.dart';
 
-enum PersonalPage { HomePage, SummariesPage, MyCaretakers, History }
+enum PersonalPage {
+  HomePage,
+  SummariesPage,
+  MyCaretakers,
+  // History,
+}
 
 int personalPageToIndex(PersonalPage page) {
   switch (page) {
@@ -12,8 +19,8 @@ int personalPageToIndex(PersonalPage page) {
       return 1;
     case .MyCaretakers:
       return 2;
-    case .History:
-      return 3;
+    // case .History:
+    //   return 3;
   }
 }
 
@@ -25,8 +32,8 @@ PersonalPage indexToPersonalPage(int index) {
       return .SummariesPage;
     case 2:
       return .MyCaretakers;
-    case 3:
-      return .History;
+    // case 3:
+    //   return .History;
   }
   throw Exception("Wtf????");
 }
@@ -35,7 +42,7 @@ const navigationDestinations = [
   NavigationDestination(icon: Icon(Icons.home), label: "Home"),
   NavigationDestination(icon: Icon(Icons.show_chart), label: "Summaries"),
   NavigationDestination(icon: Icon(Icons.favorite), label: "My Caretakers"),
-  NavigationDestination(icon: Icon(Icons.history), label: "History"),
+  // NavigationDestination(icon: Icon(Icons.history), label: "History"),
 ];
 
 const navigationRailDestinations = [
@@ -48,7 +55,7 @@ const navigationRailDestinations = [
     icon: Icon(Icons.favorite),
     label: Text("My Caretakers"),
   ),
-  NavigationRailDestination(icon: Icon(Icons.history), label: Text("History")),
+  // NavigationRailDestination(icon: Icon(Icons.history), label: Text("History")),
 ];
 
 class PersonalMainView extends StatefulWidget {
@@ -114,52 +121,13 @@ class _PersonalMainViewState extends State<PersonalMainView> {
         return PersonalSummariesPage();
       case .MyCaretakers:
         return PersonalCaretakersPage();
-      case .History:
-        return PersonalHistoryPage();
+      // case .History:
+      //   return PersonalHistoryPage();
     }
     return null;
   }
 
   Widget? _buildFloatingActionButton() {
     return null;
-  }
-}
-
-// -------------------------------------
-class PersonalHistoryPage extends StatefulWidget {
-  @override
-  State<PersonalHistoryPage> createState() => _PersonalHistoryPageState();
-}
-
-class _PersonalHistoryPageState extends State<PersonalHistoryPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Text("TODO");
-  }
-}
-
-class PersonalCaretakersPage extends StatefulWidget {
-  @override
-  State<PersonalCaretakersPage> createState() => _PersonalCaretakersPageState();
-}
-
-class _PersonalCaretakersPageState extends State<PersonalCaretakersPage> {
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return Text("TODO");
-  }
-}
-
-class PersonalSummariesPage extends StatefulWidget {
-  @override
-  State<PersonalSummariesPage> createState() => _PersonalSummariesPageState();
-}
-
-class _PersonalSummariesPageState extends State<PersonalSummariesPage> {
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return Text("TODO");
   }
 }

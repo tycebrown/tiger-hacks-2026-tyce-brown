@@ -19,6 +19,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer(), primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(Text(), unique=True, nullable=False, index=True)
+    hashed_password: Mapped[Optional[str]] = mapped_column(Text(), nullable=True)
     role: Mapped[UserRole] = mapped_column(
         SqlEnum(
             UserRole,
@@ -83,6 +84,22 @@ class SharedUserModel(pydantic.BaseModel):
     caretaker_id: int
     username: str
     role: UserRole
+
+
+class LoginRequest(pydantic.BaseModel):
+    username: str = pydantic.Field(min_length=1)
+    password: str = pydantic.Field(min_length=1)
+
+
+class PublicUserModel(pydantic.BaseModel):
+    id: int
+    username: str
+    role: UserRole
+
+
+class LoginResponse(pydantic.BaseModel):
+    user: PublicUserModel
+    token: str
 
 
 

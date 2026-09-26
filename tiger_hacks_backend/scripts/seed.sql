@@ -3,14 +3,15 @@
 DELETE FROM users;
 DELETE FROM total_sharepoints;
 DELETE FROM measures; 
-INSERT INTO users (id, username, role) VALUES
-	(1, 'John Doe', 'individual'),
-	(2, 'Jane Smith', 'individual'),
-	(3, 'Alex Johnson', 'individual'),
-	(4, 'Sam Taylor', 'individual'),
-	(5, 'Casey Brown', 'individual'),
-	(6, 'Dr. Gregory House', 'caretaker'),
-	(7, 'Dr. Leonard McCoy', 'caretaker');
+
+INSERT INTO users (id, username, role, hashed_password) VALUES
+	(1, 'John Doe', 'individual', 'scrypt$1f9f9d7b0efa75c30ef9de09a2c5aea4$179787259781bedac2e22bc6711e83ceb62a1be2858a91b4e4c1b033eba9e7ad62424c570a7998216460eba87e31ddbe4538e002c7ce19c15ebfafed7891ef59'),
+	(2, 'Jane Smith', 'individual', 'scrypt$1f9f9d7b0efa75c30ef9de09a2c5aea4$179787259781bedac2e22bc6711e83ceb62a1be2858a91b4e4c1b033eba9e7ad62424c570a7998216460eba87e31ddbe4538e002c7ce19c15ebfafed7891ef59'),
+	(3, 'Alex Johnson', 'individual', 'scrypt$1f9f9d7b0efa75c30ef9de09a2c5aea4$179787259781bedac2e22bc6711e83ceb62a1be2858a91b4e4c1b033eba9e7ad62424c570a7998216460eba87e31ddbe4538e002c7ce19c15ebfafed7891ef59'),
+	(4, 'Sam Taylor', 'individual', 'scrypt$1f9f9d7b0efa75c30ef9de09a2c5aea4$179787259781bedac2e22bc6711e83ceb62a1be2858a91b4e4c1b033eba9e7ad62424c570a7998216460eba87e31ddbe4538e002c7ce19c15ebfafed7891ef59'),
+	(5, 'Casey Brown', 'individual', 'scrypt$1f9f9d7b0efa75c30ef9de09a2c5aea4$179787259781bedac2e22bc6711e83ceb62a1be2858a91b4e4c1b033eba9e7ad62424c570a7998216460eba87e31ddbe4538e002c7ce19c15ebfafed7891ef59'),
+	(6, 'Dr. Gregory House', 'caretaker', 'scrypt$1f9f9d7b0efa75c30ef9de09a2c5aea4$179787259781bedac2e22bc6711e83ceb62a1be2858a91b4e4c1b033eba9e7ad62424c570a7998216460eba87e31ddbe4538e002c7ce19c15ebfafed7891ef59'),
+	(7, 'Dr. Leonard McCoy', 'caretaker', 'scrypt$1f9f9d7b0efa75c30ef9de09a2c5aea4$179787259781bedac2e22bc6711e83ceb62a1be2858a91b4e4c1b033eba9e7ad62424c570a7998216460eba87e31ddbe4538e002c7ce19c15ebfafed7891ef59');
 
 INSERT INTO total_sharepoints (individual_id, caretaker_id) VALUES
 	(1, 6),

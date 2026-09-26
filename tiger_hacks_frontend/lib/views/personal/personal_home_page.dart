@@ -63,48 +63,12 @@ class _PersonalHomePageState extends State<PersonalHomePage> {
   }
 
   startRecord() {
-    showDialog(context: context, builder: builder)
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        actions: [],
+        content: ListView(children: []),
+      ),
+    );
   }
-
-  // _buildSummariesTile() {
-  //   return Container(
-  //     height: 200,
-  //     child: Card(
-  //       child: Padding(
-  //         padding: EdgeInsets.all(8),
-  //         child: Row(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             Icon(Icons.show_chart),
-  //             Text(
-  //               ' Summaries',
-  //               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // _buildShareTile() {
-  //   return Container(
-  //     height: 200,
-  //     child: Card(
-  //       child: Padding(
-  //         padding: EdgeInsets.all(8),
-  //         child: Row(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             Icon(Icons.favorite),
-  //             Text(
-  //               ' Caretakers/Shared Data',
-  //               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 }
