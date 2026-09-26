@@ -5,9 +5,9 @@ import 'package:tiger_hacks_frontend/model/api_service.dart';
 import 'package:tiger_hacks_frontend/model/global_state.dart';
 import 'package:tiger_hacks_frontend/model/user.dart';
 import 'package:tiger_hacks_frontend/util.dart' show isMobile, themeSeedColor;
-import 'package:tiger_hacks_frontend/views/components/live_view.dart';
 import 'package:tiger_hacks_frontend/views/components/log_out_button.dart';
-import 'package:tiger_hacks_frontend/views/components/summaries_view.dart';
+import 'package:tiger_hacks_frontend/views/caretaker/caretaker_home_page.dart';
+import 'package:tiger_hacks_frontend/views/caretaker/caretaker_patient_view_page.dart';
 
 const _caretakerNavigationDestinations = [
   NavigationDestination(icon: Icon(Icons.people_outline), label: 'Patients'),
@@ -169,107 +169,6 @@ class _CaretakerDashboardState extends State<_CaretakerDashboard> {
       onPatientSelected: (nextPatient) {
         setState(() => _selectedPatient = nextPatient);
       },
-    );
-  }
-}
-
-class CaretakerHomePage extends StatelessWidget {
-  const CaretakerHomePage({
-    super.key,
-    required this.patients,
-    required this.onPatientSelected,
-  });
-
-  final List<SharedUserModel> patients;
-  final ValueChanged<SharedUserModel> onPatientSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: patients.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final patient = patients[index];
-        return Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 10,
-            ),
-            leading: const CircleAvatar(
-              radius: 26,
-              child: Icon(Icons.person_outline, size: 28),
-            ),
-            title: Text(
-              patient.username,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            subtitle: Text('Patient ID ${patient.individualId}'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => onPatientSelected(patient),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class CaretakerPatientViewPage extends StatelessWidget {
-  const CaretakerPatientViewPage({
-    super.key,
-    required this.caretakerId,
-    required this.patients,
-    required this.selectedPatient,
-    required this.onPatientSelected,
-  });
-
-  final int caretakerId;
-  final List<SharedUserModel> patients;
-  final SharedUserModel selectedPatient;
-  final ValueChanged<SharedUserModel> onPatientSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final patient in patients)
-                ChoiceChip(
-                  label: Text(patient.username),
-                  selected:
-                      patient.individualId == selectedPatient.individualId,
-                  onSelected: (selected) {
-                    if (selected) onPatientSelected(patient);
-                  },
-                ),
-            ],
-          ),
-        ),
-        LiveView(
-          title: 'Live View · ${selectedPatient.username}',
-          placeholder: 'Live device view',
-          compact: true,
-        ),
-        Expanded(
-          child: SummariesView(
-            key: ValueKey(selectedPatient.individualId),
-            compact: true,
-            loadData: (start, end) => ApiService.queryPersonalMeasures(
-              caretakerId: caretakerId,
-              individualId: selectedPatient.individualId,
-              start: start,
-              end: end,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -44,6 +44,20 @@ class _PersonalHomePageState extends State<PersonalHomePage> {
       context: context,
       builder: (ctx) => AlertDialog(
         actions: [],
+        title: Column(
+          children: [
+            Text(
+              "Record Measures",
+              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+            ),
+            Padding(
+              padding: EdgeInsets.only(left: 4.0),
+              child: Text(
+                "Save a snapshot of your measures. Any which don't have devices attached can be entered manually.",
+              ),
+            ),
+          ],
+        ),
         content: ListView(children: []),
       ),
     );
