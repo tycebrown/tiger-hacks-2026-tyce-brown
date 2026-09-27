@@ -115,7 +115,11 @@ class _PersonalHomePageState extends State<PersonalHomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        LiveView(title: 'Live View:', liveSource: widget.liveSource),
+        LiveView(
+          title: 'Live View:',
+          liveSource: widget.liveSource,
+          initialValues: widget.liveSource.latestValues,
+        ),
         Container(height: 16.0),
         Row(
           spacing: 8.0,

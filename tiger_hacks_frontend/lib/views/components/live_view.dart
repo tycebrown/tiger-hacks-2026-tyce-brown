@@ -4,6 +4,7 @@ import 'package:tiger_hacks_frontend/util.dart' show themeSeedColor;
 
 class LiveView extends StatefulWidget {
   final LiveSource liveSource;
+  final Map<MeasureType, num> initialValues;
   final String title;
   final bool compact;
 
@@ -11,6 +12,7 @@ class LiveView extends StatefulWidget {
     super.key,
     required this.title,
     required this.liveSource,
+    required this.initialValues,
     this.compact = false,
   });
 
@@ -197,9 +199,11 @@ class _LiveViewState extends State<LiveView> {
   Widget _buildBloodPressure() {
     return StreamBuilder<int>(
       stream: widget.liveSource.bpSysStream,
+      initialData: widget.initialValues[MeasureType.bpSys]?.toInt(),
       builder: (context, systolicSnapshot) {
         return StreamBuilder<int>(
           stream: widget.liveSource.bpDiaStream,
+          initialData: widget.initialValues[MeasureType.bpDia]?.toInt(),
           builder: (context, diastolicSnapshot) {
             final systolic = systolicSnapshot.data;
             final diastolic = diastolicSnapshot.data;
@@ -224,6 +228,9 @@ class _LiveViewState extends State<LiveView> {
   }) {
     return StreamBuilder<T>(
       stream: stream,
+      initialData: widget.initialValues[measureType] is double
+          ? widget.initialValues[measureType] as T?
+          : widget.initialValues[measureType]?.toInt() as T?,
       builder: (context, snapshot) {
         final value = snapshot.data;
         if (value == null) return _buildEmptyReading('--');

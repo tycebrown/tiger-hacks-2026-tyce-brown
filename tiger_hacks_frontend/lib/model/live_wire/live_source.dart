@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -10,6 +11,7 @@ abstract class LiveSource {
   Stream<int>? get respRateStream;
   Stream<double>? get tempStream;
   Stream<double>? get bloodOxStream;
+  Map<MeasureType, num> get latestValues;
   bool hasDevice(MeasureType measureType);
   bool isSimulated(MeasureType measureType);
 }
@@ -63,7 +65,14 @@ class PersonalLiveSource implements LiveSource {
        _heartRateStream = heartRate?.stream,
        _respRateStream = respRate?.stream,
        _tempStream = temperature?.stream,
-       _bloodOxStream = bloodOx?.stream;
+       _bloodOxStream = bloodOx?.stream {
+    _watch(MeasureType.bpSys, _bpSysStream);
+    _watch(MeasureType.bpDia, _bpDiaStream);
+    _watch(MeasureType.heartRate, _heartRateStream);
+    _watch(MeasureType.respRate, _respRateStream);
+    _watch(MeasureType.temperature, _tempStream);
+    _watch(MeasureType.bloodOx, _bloodOxStream);
+  }
 
   final Device<int>? _bpSys;
   final Device<int>? _bpDia;
@@ -78,6 +87,28 @@ class PersonalLiveSource implements LiveSource {
   final Stream<int>? _respRateStream;
   final Stream<double>? _tempStream;
   final Stream<double>? _bloodOxStream;
+  final Map<MeasureType, num> _latestValues = {};
+  final List<StreamSubscription<dynamic>> _valueSubscriptions = [];
+
+  @override
+  Map<MeasureType, num> get latestValues => Map.unmodifiable(_latestValues);
+
+  void _watch<T extends num>(MeasureType measureType, Stream<T>? stream) {
+    if (stream == null) return;
+    _valueSubscriptions.add(
+      stream.listen((value) => _latestValues[measureType] = value),
+    );
+  }
+
+  Future<void> dispose() async {
+    final subscriptions = List<StreamSubscription<dynamic>>.of(
+      _valueSubscriptions,
+    );
+    _valueSubscriptions.clear();
+    await Future.wait(
+      subscriptions.map((subscription) => subscription.cancel()),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     if (_bpSys != null) 'bpSys': _bpSys.toJson(),
@@ -189,6 +220,8 @@ abstract class Device<T> {
 
 enum Range { Healthy, Unhealthy, Critical }
 
+enum CriticalDirection { low, high }
+
 enum SimulationPattern { Healthy, Unhealthy, Critical, Deteriorating }
 
 enum MeasureType { bpSys, bpDia, heartRate, respRate, temperature, bloodOx }
@@ -250,6 +283,19 @@ Range rangeForValue(MeasureType measureType, num value) {
   return Range.Critical;
 }
 
+CriticalDirection criticalDirectionForValue(
+  MeasureType measureType,
+  num value,
+) {
+  final healthyRanges = _measureRanges[measureType]![Range.Healthy]!;
+  final lowestHealthyValue = healthyRanges
+      .map((range) => range.minimum)
+      .reduce(min);
+  return value < lowestHealthyValue
+      ? CriticalDirection.low
+      : CriticalDirection.high;
+}
+
 class SimulatedDevice<T> implements Device<T> {
   SimulationPattern pattern;
   final MeasureType measureType;
@@ -276,6 +322,7 @@ class SimulatedDevice<T> implements Device<T> {
   }
 
   Stream<T> createStream() async* {
+    await Future.delayed(const Duration(milliseconds: 500));
     int tick = 0;
     while (true) {
       yield _generateNext(tick);

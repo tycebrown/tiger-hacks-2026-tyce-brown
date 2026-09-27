@@ -45,6 +45,7 @@ class CaretakerPatientViewPage extends StatelessWidget {
         LiveView(
           title: 'Live View · ${selectedPatient.username}',
           liveSource: PersonalLiveSource.fromDevices(),
+          initialValues: const {},
           compact: true,
         ),
         Expanded(

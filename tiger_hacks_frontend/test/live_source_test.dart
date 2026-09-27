@@ -27,30 +27,35 @@ void main() {
     expect(restored.whichInterval, 1);
   });
 
-  test('personal source serializes configured devices and round trips', () {
-    final source = PersonalLiveSource.fromDevices(
-      bpSys: SimulatedDevice<int>(
-        initialPattern: SimulationPattern.Healthy,
-        measureType: MeasureType.bpSys,
-      ),
-      temperature: SimulatedDevice<double>(
-        initialPattern: SimulationPattern.Critical,
-        measureType: MeasureType.temperature,
-        whichInterval: 1,
-      ),
-    );
+  test(
+    'personal source serializes configured devices and round trips',
+    () async {
+      final source = PersonalLiveSource.fromDevices(
+        bpSys: SimulatedDevice<int>(
+          initialPattern: SimulationPattern.Healthy,
+          measureType: MeasureType.bpSys,
+        ),
+        temperature: SimulatedDevice<double>(
+          initialPattern: SimulationPattern.Critical,
+          measureType: MeasureType.temperature,
+          whichInterval: 1,
+        ),
+      );
 
-    final json =
-        jsonDecode(jsonEncode(source.toJson())) as Map<String, dynamic>;
-    final restored = PersonalLiveSource.fromJson(json);
-    final restoredJson =
-        jsonDecode(jsonEncode(restored.toJson())) as Map<String, dynamic>;
+      final json =
+          jsonDecode(jsonEncode(source.toJson())) as Map<String, dynamic>;
+      final restored = PersonalLiveSource.fromJson(json);
+      final restoredJson =
+          jsonDecode(jsonEncode(restored.toJson())) as Map<String, dynamic>;
 
-    expect(json.keys.toSet(), {'bpSys', 'temperature'});
-    expect(restoredJson, json);
-  });
+      expect(json.keys.toSet(), {'bpSys', 'temperature'});
+      expect(restoredJson, json);
+      await source.dispose();
+      await restored.dispose();
+    },
+  );
 
-  test('personal source reports which measures are simulated', () {
+  test('personal source reports which measures are simulated', () async {
     final source = PersonalLiveSource.fromDevices(
       bpSys: SimulatedDevice<int>(
         initialPattern: SimulationPattern.Healthy,
@@ -70,6 +75,36 @@ void main() {
     expect(source.isSimulated(MeasureType.bpDia), isTrue);
     expect(source.isSimulated(MeasureType.heartRate), isTrue);
     expect(source.isSimulated(MeasureType.respRate), isFalse);
+    await source.dispose();
+  });
+
+  test('personal source captures latest streamed values', () async {
+    final source = PersonalLiveSource.fromDevices(
+      heartRate: SimulatedDevice<int>(
+        initialPattern: SimulationPattern.Healthy,
+        measureType: MeasureType.heartRate,
+      ),
+    );
+    final firstReading = Completer<int>();
+    final subscription = source.heartRateStream!.listen(firstReading.complete);
+
+    final reading = await firstReading.future;
+    expect(source.latestValues, {MeasureType.heartRate: reading});
+    await subscription.cancel();
+    await source.dispose();
+  });
+
+  test('critical readings identify low and high values', () {
+    expect(rangeForValue(MeasureType.bpSys, 69), Range.Critical);
+    expect(
+      criticalDirectionForValue(MeasureType.bpSys, 69),
+      CriticalDirection.low,
+    );
+    expect(rangeForValue(MeasureType.bpSys, 180), Range.Critical);
+    expect(
+      criticalDirectionForValue(MeasureType.bpSys, 180),
+      CriticalDirection.high,
+    );
   });
 
   test('simulated stream supports live view and snapshot listeners', () async {

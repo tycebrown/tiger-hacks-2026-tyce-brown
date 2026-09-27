@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiger_hacks_frontend/model/global_state.dart';
@@ -72,7 +74,11 @@ class PersonalMainView extends StatefulWidget {
 class _PersonalMainViewState extends State<PersonalMainView> {
   PersonalPage currentPage = .HomePage;
   PersonalLiveSource _liveSource = PersonalLiveSource.fromDevices();
+  final List<StreamSubscription<dynamic>> _liveSubscriptions = [];
+  final Set<MeasureType> _criticalMeasures = {};
   bool _sourceLoaded = false;
+  bool _emergencyAlertShowing = false;
+  int _sourceGeneration = 0;
 
   @override
   void initState() {
@@ -90,15 +96,136 @@ class _PersonalMainViewState extends State<PersonalMainView> {
         // Use the empty source if persisted settings are unavailable.
       }
     }
-    if (!mounted) return;
+    if (!mounted) {
+      await liveSource.dispose();
+      return;
+    }
+    final previousSource = _liveSource;
     setState(() {
       _liveSource = liveSource;
       _sourceLoaded = true;
     });
+    _watchLiveSource(liveSource);
+    await previousSource.dispose();
   }
 
   void _updateLiveSource(PersonalLiveSource liveSource) {
+    if (identical(_liveSource, liveSource)) return;
+    final previousSource = _liveSource;
     setState(() => _liveSource = liveSource);
+    _watchLiveSource(liveSource);
+    previousSource.dispose();
+  }
+
+  void _watchLiveSource(PersonalLiveSource liveSource) {
+    final generation = ++_sourceGeneration;
+    for (final subscription in _liveSubscriptions) {
+      unawaited(subscription.cancel());
+    }
+    _liveSubscriptions.clear();
+    _criticalMeasures.clear();
+
+    void watch<T extends num>(MeasureType measure, Stream<T>? stream) {
+      if (stream == null) return;
+      _liveSubscriptions.add(
+        stream.listen((value) {
+          if (!mounted || generation != _sourceGeneration) return;
+          if (rangeForValue(measure, value) == Range.Critical) {
+            if (_criticalMeasures.add(measure)) {
+              unawaited(_showEmergencyAlert(measure, value));
+            }
+          } else {
+            _criticalMeasures.remove(measure);
+          }
+        }),
+      );
+    }
+
+    watch(MeasureType.bpSys, liveSource.bpSysStream);
+    watch(MeasureType.bpDia, liveSource.bpDiaStream);
+    watch(MeasureType.heartRate, liveSource.heartRateStream);
+    watch(MeasureType.respRate, liveSource.respRateStream);
+    watch(MeasureType.temperature, liveSource.tempStream);
+    watch(MeasureType.bloodOx, liveSource.bloodOxStream);
+  }
+
+  Future<void> _showEmergencyAlert(MeasureType measure, num value) async {
+    if (!mounted || _emergencyAlertShowing) return;
+    _emergencyAlertShowing = true;
+    final isSimulated = _liveSource.isSimulated(measure);
+
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: isSimulated,
+        builder: (dialogContext) => PopScope(
+          canPop: isSimulated,
+          child: AlertDialog(
+            title: const Text('Emergency alert'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red,
+                  size: 72,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Call 911 immediately.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${_measureLabel(measure)} is critically '
+                  '${criticalDirectionForValue(measure, value).name}.',
+                  textAlign: TextAlign.center,
+                ),
+                if (isSimulated) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'SIMULATED VALUE (since this is a simulated value, this dialog may be dismissed)',
+                    style: TextStyle(
+                      color: Theme.of(dialogContext).colorScheme.error,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              if (isSimulated)
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Dismiss'),
+                ),
+            ],
+          ),
+        ),
+      );
+    } finally {
+      _emergencyAlertShowing = false;
+    }
+  }
+
+  String _measureLabel(MeasureType measure) => switch (measure) {
+    MeasureType.bpSys => 'Blood pressure systolic',
+    MeasureType.bpDia => 'Blood pressure diastolic',
+    MeasureType.heartRate => 'Heart rate',
+    MeasureType.respRate => 'Respiratory rate',
+    MeasureType.temperature => 'Temperature',
+    MeasureType.bloodOx => 'Blood oxygen',
+  };
+
+  @override
+  void dispose() {
+    _sourceGeneration++;
+    for (final subscription in _liveSubscriptions) {
+      unawaited(subscription.cancel());
+    }
+    unawaited(_liveSource.dispose());
+    super.dispose();
   }
 
   @override
@@ -164,7 +291,6 @@ class _PersonalMainViewState extends State<PersonalMainView> {
       // case .History:
       //   return PersonalHistoryPage();
     }
-    return null;
   }
 
   Widget? _buildFloatingActionButton() {
