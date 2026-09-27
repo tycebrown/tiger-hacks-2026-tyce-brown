@@ -39,6 +39,7 @@ dependencies:
   fl_chart: ^1.2.0
   flutter_launcher_icons: ^0.14.4
   shared_preferences: ^2.5.5
+  mqtt_client: ^10.11.11
 
 dev_dependencies:
   flutter_test:

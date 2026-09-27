@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tiger_hacks_frontend/model/api_models.dart';
 import 'package:tiger_hacks_frontend/model/api_service.dart';
-import 'package:tiger_hacks_frontend/model/live_wire/live_source.dart';
+import 'package:tiger_hacks_frontend/model/live_wire/device_streamed_live_source.dart';
 import 'package:tiger_hacks_frontend/views/components/live_view.dart';
 import 'package:tiger_hacks_frontend/views/components/summaries_view.dart';
 
@@ -11,12 +11,14 @@ class CaretakerPatientViewPage extends StatelessWidget {
     required this.caretakerId,
     required this.patients,
     required this.selectedPatient,
+    required this.liveSource,
     required this.onPatientSelected,
   });
 
   final int caretakerId;
   final List<SharedUserModel> patients;
   final SharedUserModel selectedPatient;
+  final DeviceStreamedLiveSource liveSource;
   final ValueChanged<SharedUserModel> onPatientSelected;
 
   @override
@@ -44,8 +46,8 @@ class CaretakerPatientViewPage extends StatelessWidget {
         ),
         LiveView(
           title: 'Live View · ${selectedPatient.username}',
-          liveSource: PersonalLiveSource.fromDevices(),
-          initialValues: const {},
+          liveSource: liveSource,
+          initialValues: liveSource.latestValues,
           compact: true,
         ),
         Expanded(

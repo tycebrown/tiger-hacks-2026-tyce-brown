@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiger_hacks_frontend/model/global_state.dart';
 import 'package:tiger_hacks_frontend/model/live_wire/live_source.dart';
+import 'package:tiger_hacks_frontend/model/live_wire/live_wire_mqtt_client.dart';
 import 'package:tiger_hacks_frontend/util.dart' show isMobile, themeSeedColor;
 import 'package:tiger_hacks_frontend/views/components/log_out_button.dart';
 import 'package:tiger_hacks_frontend/views/personal/personal_caretakers_page.dart';
@@ -76,6 +77,8 @@ class _PersonalMainViewState extends State<PersonalMainView> {
   PersonalLiveSource _liveSource = PersonalLiveSource.fromDevices();
   final List<StreamSubscription<dynamic>> _liveSubscriptions = [];
   final Set<MeasureType> _criticalMeasures = {};
+  int? _userId;
+  LiveWireMqttClient? _mqttClient;
   bool _sourceLoaded = false;
   bool _emergencyAlertShowing = false;
   int _sourceGeneration = 0;
@@ -83,15 +86,19 @@ class _PersonalMainViewState extends State<PersonalMainView> {
   @override
   void initState() {
     super.initState();
+    _userId = context.read<GlobalState>().user?.id;
+    if (_userId != null) {
+      _mqttClient = LiveWireMqttClient();
+      unawaited(_mqttClient!.connect());
+    }
     _loadLiveSource();
   }
 
   Future<void> _loadLiveSource() async {
-    final userId = context.read<GlobalState>().user?.id;
     var liveSource = PersonalLiveSource.fromDevices();
-    if (userId != null) {
+    if (_userId != null) {
       try {
-        liveSource = await loadDefaultPersonalLiveSource(userId);
+        liveSource = await loadDefaultPersonalLiveSource(_userId!);
       } catch (_) {
         // Use the empty source if persisted settings are unavailable.
       }
@@ -130,8 +137,12 @@ class _PersonalMainViewState extends State<PersonalMainView> {
       _liveSubscriptions.add(
         stream.listen((value) {
           if (!mounted || generation != _sourceGeneration) return;
+          if (_userId != null) {
+            _mqttClient?.publishMeasures(_userId!, liveSource.latestValues);
+          }
           if (rangeForValue(measure, value) == Range.Critical) {
             if (_criticalMeasures.add(measure)) {
+              if (_userId != null) _mqttClient?.publishEmergency(_userId!);
               unawaited(_showEmergencyAlert(measure, value));
             }
           } else {
@@ -225,6 +236,7 @@ class _PersonalMainViewState extends State<PersonalMainView> {
       unawaited(subscription.cancel());
     }
     unawaited(_liveSource.dispose());
+    unawaited(_mqttClient?.dispose());
     super.dispose();
   }
 
