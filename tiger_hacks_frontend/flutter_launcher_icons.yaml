@@ -1,0 +1,16 @@
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  image_path_android: "assets/icon.png"
+  web:
+    generate: true
+    image_path: "assets/icon.png"
+    background_color: "#ffffff"
+  windows:
+    generate: true
+    image_path: "assets/icon.png"
+    icon_size: 48
+
+

@@ -218,7 +218,7 @@ class LiveWireMqttClient {
   }
 
   static String _newClientId() {
-    final suffix = Random().nextInt(1 << 32).toRadixString(16);
+    final suffix = Random().nextInt(1 << 31).toRadixString(16);
     return 'livewire-${DateTime.now().microsecondsSinceEpoch}-$suffix';
   }
 }

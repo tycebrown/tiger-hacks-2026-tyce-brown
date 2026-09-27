@@ -11,9 +11,10 @@ class LogOutButton extends StatelessWidget {
       onPressed: () {
         final state = context.read<GlobalState>();
         state.user = null;
-        Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => LoginPage()),
+          (_) => false,
         );
       },
     );

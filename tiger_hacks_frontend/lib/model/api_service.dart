@@ -104,10 +104,10 @@ class ApiService {
 
   static Future<SharepointModel> shareUser({
     required int userId,
-    required int caretakerId,
+    required String caretakerUsername,
   }) async {
     final response = await _client.post(
-      _uri('/user/$userId/share/$caretakerId'),
+      _uri('/user/$userId/share/${Uri.encodeComponent(caretakerUsername)}'),
       headers: _authenticatedHeaders,
     );
     return SharepointModel.fromJson(

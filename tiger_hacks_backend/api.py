@@ -140,21 +140,24 @@ def _serialize_measures(records: list[MeasureRecord]) -> list[MeasureModel]:
 
 
 @router.post(
-	'/user/{id}/share/{caretaker_id}',
+	'/user/{id}/share/{caretaker_username}',
 	status_code=201,
 	response_model=SharepointModel,
 	dependencies=[Depends(require_path_user("id", UserRole.INDIVIDUAL))],
 )
-def share_user(id: int, caretaker_id: int) -> SharepointModel:
+def share_user(id: int, caretaker_username: str) -> SharepointModel:
 	with db.SessionLocal() as session:
 		if session.get(User, id) is None:
 			raise HTTPException(status_code=404, detail="User not found")
-		if session.get(User, caretaker_id) is None:
+		caretaker = session.scalar(
+			select(User).where(User.username == caretaker_username)
+		)
+		if caretaker is None or caretaker.role != UserRole.CARETAKER:
 			raise HTTPException(status_code=404, detail="Caretaker not found")
 
 		sharepoint = TotalSharepoint(
 			individual_id=id,
-			caretaker_id=caretaker_id,
+			caretaker_id=caretaker.id,
 		)
 		session.add(sharepoint)
 		session.commit()

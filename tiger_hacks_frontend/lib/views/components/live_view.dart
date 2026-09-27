@@ -33,7 +33,7 @@ class _LiveViewState extends State<LiveView> {
                 Text(widget.title),
                 const SizedBox(height: 6),
                 Container(
-                  height: 112,
+                  height: 300,
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(8),
@@ -245,37 +245,50 @@ class _LiveViewState extends State<LiveView> {
   }
 
   Widget _buildEmptyReading(String text) {
+    final compact = widget.compact;
     return Center(
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: compact ? 28 : 48,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
   Widget _readingContent(String value, String unit, Range range) {
+    final compact = widget.compact;
     final color = switch (range) {
       Range.Healthy => Colors.green,
       Range.Unhealthy => Colors.orange,
       Range.Critical => Colors.red,
     };
+    final valueSize = compact ? 28.0 : 48.0;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: valueSize,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          Text(unit),
+          Text(unit, style: TextStyle(fontSize: compact ? 11 : null)),
           Text(
             range.name,
-            style: TextStyle(color: color, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: compact ? 10 : null,
+            ),
           ),
         ],
       ),
