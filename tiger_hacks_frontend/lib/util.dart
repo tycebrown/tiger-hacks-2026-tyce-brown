@@ -8,6 +8,9 @@ bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
 const themeSeedColor = Color(0xFFd16d6a);
 
-final urlBase = !isMobile ? 'http://127.0.0.1:8000' : '';
+final urlBase = String.fromEnvironment(
+  'API_BASE',
+  defaultValue: !isMobile ? 'http://127.0.0.1:8000' : '',
+);
 
 final sharedPrefs = SharedPreferencesAsync();
