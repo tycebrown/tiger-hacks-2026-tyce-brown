@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tiger_hacks_frontend/model/api_models.dart';
 import 'package:tiger_hacks_frontend/model/api_service.dart';
+import 'package:tiger_hacks_frontend/model/live_wire/live_source.dart';
 import 'package:tiger_hacks_frontend/views/components/live_view.dart';
 import 'package:tiger_hacks_frontend/views/components/summaries_view.dart';
 
@@ -43,7 +44,7 @@ class CaretakerPatientViewPage extends StatelessWidget {
         ),
         LiveView(
           title: 'Live View · ${selectedPatient.username}',
-          placeholder: 'Live device view',
+          liveSource: PersonalLiveSource.fromDevices(),
           compact: true,
         ),
         Expanded(

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:tiger_hacks_frontend/model/live_wire/live_source.dart';
 import 'package:tiger_hacks_frontend/util.dart' show themeSeedColor;
 
 class LiveView extends StatefulWidget {
+  final LiveSource liveSource;
+  final String title;
+  final bool compact;
+
   const LiveView({
     super.key,
     required this.title,
-    required this.placeholder,
+    required this.liveSource,
     this.compact = false,
   });
-
-  final String title;
-  final String placeholder;
-  final bool compact;
 
   @override
   State<LiveView> createState() => _LiveViewState();
@@ -36,7 +37,7 @@ class _LiveViewState extends State<LiveView> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   alignment: Alignment.center,
-                  child: Text(widget.placeholder),
+                  child: _buildView(),
                 ),
               ],
             ),
@@ -48,18 +49,233 @@ class _LiveViewState extends State<LiveView> {
               Container(
                 height: 400,
                 decoration: BoxDecoration(
-                  color: themeSeedColor.withAlpha(50),
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
                   shape: BoxShape.rectangle,
                   borderRadius: const BorderRadius.all(Radius.circular(16)),
                 ),
-                child: Center(
-                  child: Text(
-                    widget.placeholder,
-                    style: const TextStyle(fontStyle: FontStyle.italic),
-                  ),
-                ),
+                child: _buildView(),
               ),
             ],
           );
+  }
+
+  Widget _buildView() {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildMeasure(
+              'Blood Pressure',
+              _buildBloodPressure(),
+              isSimulated:
+                  widget.liveSource.isSimulated(MeasureType.bpSys) &&
+                  widget.liveSource.isSimulated(MeasureType.bpDia),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: _buildMeasure(
+                    'Heart Rate',
+                    _buildMetric<int>(
+                      stream: widget.liveSource.heartRateStream,
+                      measureType: MeasureType.heartRate,
+                      unit: 'bpm',
+                    ),
+                    isSimulated: widget.liveSource.isSimulated(
+                      MeasureType.heartRate,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: _buildMeasure(
+                    'Respiratory Rate',
+                    _buildMetric<int>(
+                      stream: widget.liveSource.respRateStream,
+                      measureType: MeasureType.respRate,
+                      unit: 'breaths/min',
+                    ),
+                    isSimulated: widget.liveSource.isSimulated(
+                      MeasureType.respRate,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: _buildMeasure(
+                    'Blood Oxygen',
+                    _buildMetric<double>(
+                      stream: widget.liveSource.bloodOxStream,
+                      measureType: MeasureType.bloodOx,
+                      unit: '%',
+                    ),
+                    isSimulated: widget.liveSource.isSimulated(
+                      MeasureType.bloodOx,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: _buildMeasure(
+                    'Temperature',
+                    _buildMetric<double>(
+                      stream: widget.liveSource.tempStream,
+                      measureType: MeasureType.temperature,
+                      unit: '°F',
+                    ),
+                    isSimulated: widget.liveSource.isSimulated(
+                      MeasureType.temperature,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMeasure(
+    String title,
+    Widget reading, {
+    required bool isSimulated,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: themeSeedColor.withAlpha(50),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Wrap(
+            spacing: 4,
+            runSpacing: 2,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              if (isSimulated)
+                Tooltip(
+                  message: 'Simulated device',
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: Text(
+                        'SIM',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          Expanded(child: reading),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBloodPressure() {
+    return StreamBuilder<int>(
+      stream: widget.liveSource.bpSysStream,
+      builder: (context, systolicSnapshot) {
+        return StreamBuilder<int>(
+          stream: widget.liveSource.bpDiaStream,
+          builder: (context, diastolicSnapshot) {
+            final systolic = systolicSnapshot.data;
+            final diastolic = diastolicSnapshot.data;
+            if (systolic == null || diastolic == null) {
+              return _buildEmptyReading('--/--');
+            }
+
+            final systolicRange = rangeForValue(MeasureType.bpSys, systolic);
+            final diastolicRange = rangeForValue(MeasureType.bpDia, diastolic);
+            final range = _worstRange(systolicRange, diastolicRange);
+            return _readingContent('$systolic / $diastolic', 'mmHg', range);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMetric<T extends num>({
+    required Stream<T>? stream,
+    required MeasureType measureType,
+    required String unit,
+  }) {
+    return StreamBuilder<T>(
+      stream: stream,
+      builder: (context, snapshot) {
+        final value = snapshot.data;
+        if (value == null) return _buildEmptyReading('--');
+
+        return _readingContent(
+          value is double ? value.toStringAsFixed(1) : value.toString(),
+          unit,
+          rangeForValue(measureType, value),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyReading(String text) {
+    return Center(
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _readingContent(String value, String unit, Range range) {
+    final color = switch (range) {
+      Range.Healthy => Colors.green,
+      Range.Unhealthy => Colors.orange,
+      Range.Critical => Colors.red,
+    };
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 48,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(unit),
+          Text(
+            range.name,
+            style: TextStyle(color: color, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Range _worstRange(Range first, Range second) {
+    return first.index >= second.index ? first : second;
   }
 }

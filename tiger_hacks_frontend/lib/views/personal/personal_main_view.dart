@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tiger_hacks_frontend/model/global_state.dart';
+import 'package:tiger_hacks_frontend/model/live_wire/live_source.dart';
 import 'package:tiger_hacks_frontend/util.dart' show isMobile, themeSeedColor;
 import 'package:tiger_hacks_frontend/views/components/log_out_button.dart';
 import 'package:tiger_hacks_frontend/views/personal/personal_caretakers_page.dart';
@@ -68,6 +71,35 @@ class PersonalMainView extends StatefulWidget {
 
 class _PersonalMainViewState extends State<PersonalMainView> {
   PersonalPage currentPage = .HomePage;
+  PersonalLiveSource _liveSource = PersonalLiveSource.fromDevices();
+  bool _sourceLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLiveSource();
+  }
+
+  Future<void> _loadLiveSource() async {
+    final userId = context.read<GlobalState>().user?.id;
+    var liveSource = PersonalLiveSource.fromDevices();
+    if (userId != null) {
+      try {
+        liveSource = await loadDefaultPersonalLiveSource(userId);
+      } catch (_) {
+        // Use the empty source if persisted settings are unavailable.
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _liveSource = liveSource;
+      _sourceLoaded = true;
+    });
+  }
+
+  void _updateLiveSource(PersonalLiveSource liveSource) {
+    setState(() => _liveSource = liveSource);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +150,13 @@ class _PersonalMainViewState extends State<PersonalMainView> {
   Widget? _buildContent() {
     switch (currentPage) {
       case .HomePage:
-        return PersonalHomePage();
+        if (!_sourceLoaded) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return PersonalHomePage(
+          liveSource: _liveSource,
+          onLiveSourceChanged: _updateLiveSource,
+        );
       case .SummariesPage:
         return PersonalSummariesPage();
       case .MyCaretakers:
