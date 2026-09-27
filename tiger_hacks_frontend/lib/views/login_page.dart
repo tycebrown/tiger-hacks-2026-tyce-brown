@@ -77,6 +77,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   TextFormField(
                     controller: _usernameController,
+                    autofillHints: ["Jane Smith", "Dr. Gregory House"],
                     decoration: const InputDecoration(labelText: 'Username'),
                     textInputAction: TextInputAction.next,
                     validator: (value) => value == null || value.trim().isEmpty
@@ -87,6 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                   TextFormField(
                     controller: _passwordController,
                     decoration: const InputDecoration(labelText: 'Password'),
+                    autofillHints: ["abc123"],
                     obscureText: true,
                     onFieldSubmitted: (_) => _submit(),
                     validator: (value) => value == null || value.isEmpty
@@ -109,6 +111,10 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: _submit,
                       child: const Text('Log in'),
                     ),
+                  ),
+                  const SizedBox(height: 36),
+                  const Text(
+                    "Demo accounts:\nIndividual: Jane Smith\nCaretaker: Dr. Gregory House\nPassword for both: abc123",
                   ),
                 ],
               ),
